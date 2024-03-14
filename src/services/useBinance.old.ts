@@ -8,12 +8,11 @@ const useBinance = (): [number | null, number | null] => {
   useEffect(() => {
     const binanceService = new BinanceService();
 
-    binanceService.getBuyPrice(setBuyPrice);
-    binanceService.getSellPrice(setSellPrice);
-
-    return () => {
-      binanceService.closeConnection();
+    const logPrice = (price: number) => {
+      console.log('Current price:', price);
     };
+
+    binanceService.getBuyPrice(logPrice);
   }, []);
 
   return [buyPrice, sellPrice];
