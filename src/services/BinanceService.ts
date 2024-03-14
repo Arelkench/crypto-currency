@@ -40,11 +40,11 @@ export class BinanceService {
   public closeConnection(): void {
     this.ws.close();
   }
-  public getEthUsdtBuyPrice(callback: (price: number) => void): void {
+  public getBuyPrice(callback: (price: number) => void): void {
     this.ethUsdtBuyPriceCallback = callback;
   }
 
-  public getEthUsdtSellPrice(callback: (price: number) => void): void {
+  public getSellPrice(callback: (price: number) => void): void {
     this.ethUsdtSellPriceCallback = callback;
   }
 }
