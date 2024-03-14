@@ -1,9 +1,14 @@
+export type PriceCallbackProps = {
+  price: number;
+  isBuy: boolean;
+};
+
+export type PriceCallback = (props: PriceCallbackProps) => void;
+
 export class BinanceService {
   private ws: WebSocket;
   private isOpened: boolean;
-  private priceCallback:
-    | (({ price, isBuy }: { price: number; isBuy: boolean }) => void)
-    | null = null;
+  private priceCallback: PriceCallback = () => {};
   private dataBuffer: number[] = [];
 
   constructor() {
@@ -28,10 +33,6 @@ export class BinanceService {
       const tradeData = JSON.parse(event.data);
       const price = parseFloat(tradeData.p);
       const isBuy = tradeData.m;
-
-      if (!this.priceCallback) {
-        return;
-      }
 
       this.dataBuffer.push(tradeData);
 
