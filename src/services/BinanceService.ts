@@ -1,18 +1,24 @@
 export class BinanceService {
   private ws: WebSocket;
-  private ethUsdtBuyPriceCallback: ((price: number) => void) | null = null;
-  private ethUsdtSellPriceCallback: ((price: number) => void) | null = null;
+  private isOpened: boolean;
+  private priceCallback:
+    | (({ price, isBuy }: { price: number; isBuy: boolean }) => void)
+    | null = null;
+  private dataBuffer: number[] = [];
+
   constructor() {
-    this.ws = new WebSocket('wss://stream.binance.com:9443/ws/usdteth@trade');
+    this.ws = new WebSocket('wss://stream.binance.com:9443/ws/ethusdt@trade');
+    this.isOpened = false;
     this.initWebSocket();
   }
 
   private initWebSocket(): void {
     this.ws.onopen = () => {
+      this.isOpened = true;
       this.ws.send(
         JSON.stringify({
           method: 'SUBSCRIBE',
-          params: ['usdteth@trade'],
+          params: ['ethusdt@trade'],
           id: 1,
         }),
       );
@@ -20,16 +26,20 @@ export class BinanceService {
 
     this.ws.onmessage = (event: MessageEvent) => {
       const tradeData = JSON.parse(event.data);
+      const price = parseFloat(tradeData.p);
       const isBuy = tradeData.m;
-      if (isBuy && this.ethUsdtBuyPriceCallback) {
-        // If it's a buy trade and the buy callback is provided, invoke the buy callback with the price
-        self.postMessage({ price: tradeData.p, isSellPrice: false });
-        this.ethUsdtBuyPriceCallback(tradeData.p);
-      } else if (!isBuy && this.ethUsdtSellPriceCallback) {
-        // If it's a sell trade and the sell callback is provided, invoke the sell callback with the price
-        self.postMessage({ price: tradeData.p, isSellPrice: true });
-        this.ethUsdtSellPriceCallback(tradeData.p);
+
+      if (!this.priceCallback) {
+        return;
       }
+
+      this.dataBuffer.push(tradeData);
+
+      if (this.dataBuffer.length > 10) {
+        this.dataBuffer.shift();
+      }
+
+      this.priceCallback({ price, isBuy });
     };
 
     this.ws.onerror = (error: Event) => {
@@ -38,13 +48,15 @@ export class BinanceService {
   }
 
   public closeConnection(): void {
-    this.ws.close();
-  }
-  public getBuyPrice(callback: (price: number) => void): void {
-    this.ethUsdtBuyPriceCallback = callback;
+    if (this.isOpened) {
+      this.ws.close();
+    }
   }
 
-  public getSellPrice(callback: (price: number) => void): void {
-    this.ethUsdtSellPriceCallback = callback;
+  public getPrice(
+    callback: ({ price, isBuy }: { price: number; isBuy: boolean }) => void,
+  ): void {
+    // Set the callback function to be invoked when the price is received
+    this.priceCallback = callback;
   }
 }

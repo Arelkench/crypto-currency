@@ -1,11 +1,12 @@
-function App() {
-  return (
-    <>
-      <div>
-        Init
-      </div>
-    </>
-  )
-}
+import { FC } from 'react';
+import ETHForm from './components/ETHForm.tsx';
 
-export default App
+const App: FC = () => {
+  return (
+    <div>
+      <ETHForm />
+    </div>
+  );
+};
+
+export default App;

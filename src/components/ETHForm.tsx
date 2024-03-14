@@ -5,6 +5,7 @@ import {
   useCallback,
   useMemo,
   ChangeEvent,
+  useEffect,
 } from 'react';
 import { TextField, ToggleButton, ToggleButtonGroup, Box } from '@mui/material';
 import { useBinance } from '../services/useBinance.ts';
@@ -31,9 +32,13 @@ const ETHForm: FC = () => {
     [],
   );
   const handleEthChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (price === null) return;
     const newEthAmount = event.target.value;
-    setEthAmount(newEthAmount);
+
+    if (newEthAmount <= '0' && newEthAmount != '') {
+      return;
+    }
+
+    setEthAmount(Number(newEthAmount));
 
     // Calculate USDT amount based on the provided ETH amount
     const usdtAmount = parseFloat(newEthAmount) * price;
@@ -49,6 +54,14 @@ const ETHForm: FC = () => {
     const ethAmount = parseFloat(newUsdtAmount) / price;
     setEthAmount(ethAmount);
   };
+
+  useEffect(() => {
+    if (!price || typeof ethAmount === 'string') {
+      return;
+    }
+
+    setUsdtAmount(ethAmount * price);
+  }, [activeTab, ethAmount, price]);
 
   return (
     <div
